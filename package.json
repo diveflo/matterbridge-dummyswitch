@@ -2,15 +2,15 @@
   "name": "matterbridge-dummyswitch",
   "version": "0.1.1",
   "description": "A very simple Matterbridge dummy switch plugin.",
-  "author": "",
+  "author": "diveflo",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/flo/matterbridge-dummyswitch",
+  "homepage": "https://github.com/diveflo/matterbridge-dummyswitch#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flo/matterbridge-dummyswitch.git"
+    "url": "git+ssh://git@github.com/diveflo/matterbridge-dummyswitch.git"
   },
   "bugs": {
-    "url": "https://github.com/flo/matterbridge-dummyswitch/issues"
+    "url": "https://github.com/diveflo/matterbridge-dummyswitch/issues"
   },
   "keywords": [
     "matterbridge",
@@ -57,5 +57,8 @@
     "@types/node": "^24.0.0",
     "shx": "^0.4.0",
     "typescript": "^5.8.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
