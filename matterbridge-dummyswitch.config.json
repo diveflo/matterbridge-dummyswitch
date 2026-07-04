@@ -1,0 +1,5 @@
+{
+  "name": "matterbridge-dummyswitch",
+  "type": "DynamicPlatform",
+  "switches": []
+}

@@ -1,0 +1,77 @@
+{
+  "title": "Matterbridge Dummy Switch",
+  "description": "Configuration for dummy On/Off devices.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "title": "Plugin Name",
+      "description": "Plugin name",
+      "type": "string",
+      "readOnly": true,
+      "ui:widget": "hidden"
+    },
+    "type": {
+      "title": "Plugin Type",
+      "description": "Plugin type",
+      "type": "string",
+      "readOnly": true,
+      "ui:widget": "hidden"
+    },
+    "version": {
+      "title": "Plugin Version",
+      "description": "Plugin version",
+      "type": "string",
+      "readOnly": true,
+      "ui:widget": "hidden"
+    },
+    "debug": {
+      "title": "Enable Debug",
+      "description": "Enable debug logging for the plugin",
+      "type": "boolean",
+      "default": false,
+      "ui:widget": "hidden"
+    },
+    "unregisterOnShutdown": {
+      "title": "Unregister On Shutdown",
+      "description": "Unregister all devices on shutdown",
+      "type": "boolean",
+      "default": false,
+      "ui:widget": "hidden"
+    },
+    "switches": {
+      "type": "array",
+      "title": "Switches",
+      "description": "Dummy switches to create. Empty by default.",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "enum": [
+              "switch",
+              "outlet",
+              "light"
+            ],
+            "default": "switch"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ],
+  "additionalProperties": false
+}

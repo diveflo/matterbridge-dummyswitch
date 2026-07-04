@@ -1,0 +1,61 @@
+{
+  "name": "matterbridge-dummyswitch",
+  "version": "0.1.1",
+  "description": "A very simple Matterbridge dummy switch plugin.",
+  "author": "",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/flo/matterbridge-dummyswitch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flo/matterbridge-dummyswitch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flo/matterbridge-dummyswitch/issues"
+  },
+  "keywords": [
+    "matterbridge",
+    "plugin",
+    "matter",
+    "switch",
+    "dummy",
+    "smarthome"
+  ],
+  "type": "module",
+  "main": "dist/module.js",
+  "types": "dist/module.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.js",
+      "types": "./dist/module.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=20.19.0 <21.0.0 || >=22.13.0 <23.0.0 || >=24.0.0 <25.0.0 || >=26.0.0 <27.0.0"
+  },
+  "files": [
+    "dist",
+    "*.config.json",
+    "*.schema.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "clean": "shx rm -rf *.tsbuildinfo dist",
+    "cleanBuild": "npm run clean && npm run build",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "prepack": "npm run cleanBuild",
+    "dev:link": "npm link matterbridge",
+    "start": "matterbridge",
+    "matterbridge:add": "matterbridge -add .",
+    "matterbridge:remove": "matterbridge -remove .",
+    "matterbridge:enable": "matterbridge -enable .",
+    "matterbridge:disable": "matterbridge -disable .",
+    "matterbridge:list": "matterbridge -list"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "shx": "^0.4.0",
+    "typescript": "^5.8.0"
+  }
+}
