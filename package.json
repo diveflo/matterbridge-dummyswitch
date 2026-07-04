@@ -1,7 +1,7 @@
 {
   "name": "matterbridge-dummyswitch",
   "version": "0.1.1",
-  "description": "A very simple Matterbridge dummy switch plugin.",
+  "description": "Matterbridge dummy switch plugin",
   "author": "diveflo",
   "license": "Apache-2.0",
   "homepage": "https://github.com/diveflo/matterbridge-dummyswitch#readme",
