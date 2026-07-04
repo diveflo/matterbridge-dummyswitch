@@ -5,14 +5,7 @@
  * @license Apache-2.0
  */
 
-import {
-  BasePlatformConfig,
-  MatterbridgeDynamicPlatform,
-  MatterbridgeEndpoint,
-  onOffLight,
-  onOffPlugInUnit,
-  PlatformMatterbridge,
-} from 'matterbridge';
+import { BasePlatformConfig, MatterbridgeDynamicPlatform, MatterbridgeEndpoint, onOffLight, onOffPlugInUnit, PlatformMatterbridge } from 'matterbridge';
 import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { OnOff } from 'matterbridge/matter/clusters';
 
@@ -27,11 +20,7 @@ export type DummySwitchPlatformConfig = BasePlatformConfig & {
   switches?: DummySwitchConfig[];
 };
 
-export default function initializePlugin(
-  matterbridge: PlatformMatterbridge,
-  log: AnsiLogger,
-  config: DummySwitchPlatformConfig,
-): DummySwitchPlatform {
+export default function initializePlugin(matterbridge: PlatformMatterbridge, log: AnsiLogger, config: DummySwitchPlatformConfig): DummySwitchPlatform {
   return new DummySwitchPlatform(matterbridge, log, config);
 }
 
@@ -42,9 +31,7 @@ export class DummySwitchPlatform extends MatterbridgeDynamicPlatform {
     super(matterbridge, log, config);
 
     if (typeof this.verifyMatterbridgeVersion !== 'function' || !this.verifyMatterbridgeVersion('3.8.0')) {
-      throw new Error(
-        `This plugin requires Matterbridge version >= "3.8.0". Please update Matterbridge from ${this.matterbridge.matterbridgeVersion}.`,
-      );
+      throw new Error(`This plugin requires Matterbridge version >= "3.8.0". Please update Matterbridge from ${this.matterbridge.matterbridgeVersion}.`);
     }
 
     this.switches = this.normalizeSwitches(config.switches);
@@ -56,7 +43,6 @@ export class DummySwitchPlatform extends MatterbridgeDynamicPlatform {
     await this.registerDummySwitches();
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   override async onChangeLoggerLevel(logLevel: LogLevel): Promise<void> {
     this.log.info(`Logger level changed to ${logLevel}`);
   }
@@ -82,24 +68,11 @@ export class DummySwitchPlatform extends MatterbridgeDynamicPlatform {
 
   private async registerDummySwitch(dummySwitch: DummySwitchConfig, index: number): Promise<void> {
     const deviceType = dummySwitch.type === 'light' ? onOffLight : onOffPlugInUnit;
-    const productName =
-      dummySwitch.type === 'light'
-        ? 'Matterbridge Dummy Light'
-        : dummySwitch.type === 'outlet'
-          ? 'Matterbridge Dummy Outlet'
-          : 'Matterbridge Dummy Switch';
+    const productName = dummySwitch.type === 'light' ? 'Matterbridge Dummy Light' : dummySwitch.type === 'outlet' ? 'Matterbridge Dummy Outlet' : 'Matterbridge Dummy Switch';
     const serialNumber = `matterbridge-dummyswitch-${index + 1}-${this.slugify(dummySwitch.name)}`;
 
     const switchEndpoint = new MatterbridgeEndpoint(deviceType, { id: serialNumber })
-      .createDefaultBridgedDeviceBasicInformationClusterServer(
-        dummySwitch.name,
-        serialNumber,
-        this.matterbridge.aggregatorVendorId,
-        'Matterbridge',
-        productName,
-        1,
-        '1.0.0',
-      )
+      .createDefaultBridgedDeviceBasicInformationClusterServer(dummySwitch.name, serialNumber, this.matterbridge.aggregatorVendorId, 'Matterbridge', productName, 1, '1.0.0')
       .createDefaultPowerSourceWiredClusterServer()
       .addRequiredClusters();
 

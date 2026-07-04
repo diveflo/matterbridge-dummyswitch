@@ -1,0 +1,12 @@
+# .prettierignore
+# This file specifies directories and files that should be ignored by prettier formatting
+
+.git/
+.cache/
+coverage/
+dist/
+node_modules/
+temp/
+
+package-lock.json
+**/*.html

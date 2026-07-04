@@ -53,25 +53,15 @@
           "type": {
             "type": "string",
             "title": "Type",
-            "enum": [
-              "switch",
-              "outlet",
-              "light"
-            ],
+            "enum": ["switch", "outlet", "light"],
             "default": "switch"
           }
         },
-        "required": [
-          "name",
-          "type"
-        ],
+        "required": ["name", "type"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "name",
-    "type"
-  ],
+  "required": ["name", "type"],
   "additionalProperties": false
 }
