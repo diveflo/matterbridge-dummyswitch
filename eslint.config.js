@@ -67,9 +67,8 @@ export default defineConfig([
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    name: 'TypeScript Source Files',
-    files: ['src/**/*.ts'],
-    ignores: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    name: 'TypeScript Files',
+    files: ['src/**/*.ts', 'vitest/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -95,15 +94,7 @@ export default defineConfig([
   },
   {
     name: 'Vitest Test Files',
-    files: ['vitest/*.spec.ts', 'vitest/*.test.ts'],
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: {
-        project: './tsconfig.vitest.json',
-        sourceType: 'module',
-        ecmaVersion: 'latest',
-      },
-    },
+    files: ['vitest/**/*.{spec,test}.ts'],
     plugins: {
       vitest: pluginVitest,
     },
