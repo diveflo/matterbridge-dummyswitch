@@ -142,7 +142,7 @@ const createLog = () => ({
 const createConfig = (overrides: Partial<DummySwitchPlatformConfig> = {}): DummySwitchPlatformConfig => ({
   name: 'plugin',
   type: 'DynamicPlatform',
-  version: '0.1.4',
+  version: '1.0.0',
   debug: false,
   unregisterOnShutdown: false,
   ...overrides,
