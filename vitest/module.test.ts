@@ -63,9 +63,10 @@ const matterbridgeMock = vi.hoisted(() => {
   const baseOnConfigChanged = vi.fn(async (_config: unknown) => {});
   const baseOnShutdown = vi.fn(async (_reason?: string) => {});
   const verifyMatterbridgeVersion = vi.fn((_version: string) => true);
+  let ready: Promise<void> = Promise.resolve();
 
   class MatterbridgeDynamicPlatform {
-    public readonly ready = Promise.resolve();
+    public readonly ready: Promise<void>;
     public readonly matterbridge: { matterbridgeVersion: string; aggregatorVendorId: number };
 
     constructor(
@@ -74,6 +75,7 @@ const matterbridgeMock = vi.hoisted(() => {
       public readonly config: { unregisterOnShutdown?: boolean },
     ) {
       this.matterbridge = matterbridge;
+      this.ready = ready;
     }
 
     verifyMatterbridgeVersion(version: string): boolean {
@@ -106,6 +108,9 @@ const matterbridgeMock = vi.hoisted(() => {
     onOffPlugInUnit,
     registeredDevices,
     registerDevice,
+    setReady: (value: Promise<void>) => {
+      ready = value;
+    },
     unregisterAllDevices,
     verifyMatterbridgeVersion,
   };
@@ -139,6 +144,15 @@ const createLog = () => ({
   info: vi.fn(),
 });
 
+const createDeferred = () => {
+  let resolvePromise!: () => void;
+  const promise = new Promise<void>((resolve) => {
+    resolvePromise = resolve;
+  });
+
+  return { promise, resolve: resolvePromise };
+};
+
 const createConfig = (overrides: Partial<DummySwitchPlatformConfig> = {}): DummySwitchPlatformConfig => ({
   name: 'plugin',
   type: 'DynamicPlatform',
@@ -157,6 +171,7 @@ describe('matterbridge-dummyswitch module', () => {
     matterbridgeMock.baseOnShutdown.mockClear();
     matterbridgeMock.verifyMatterbridgeVersion.mockClear();
     matterbridgeMock.verifyMatterbridgeVersion.mockReturnValue(true);
+    matterbridgeMock.setReady(Promise.resolve());
   });
 
   it('exports the Matterbridge plugin entry point and platform class', async () => {
@@ -182,6 +197,24 @@ describe('matterbridge-dummyswitch module', () => {
     expect(() => new DummySwitchPlatform({ ...createMatterbridge(), matterbridgeVersion: '3.7.9' } as never, createLog() as never, createConfig())).toThrow(
       'This plugin requires Matterbridge version >= "3.8.0". Please update Matterbridge from 3.7.9.',
     );
+  });
+
+  it('rejects Matterbridge versions when the compatibility helper is unavailable', async () => {
+    const { DummySwitchPlatform } = await import('../src/module.js');
+    const prototype = matterbridgeMock.MatterbridgeDynamicPlatform.prototype as {
+      verifyMatterbridgeVersion?: (version: string) => boolean;
+    };
+    const verifyMatterbridgeVersion = prototype.verifyMatterbridgeVersion;
+    prototype.verifyMatterbridgeVersion = undefined;
+
+    try {
+      expect(() => new DummySwitchPlatform(createMatterbridge() as never, createLog() as never, createConfig())).toThrow(
+        'This plugin requires Matterbridge version >= "3.8.0". Please update Matterbridge from 3.8.0.',
+      );
+      expect(matterbridgeMock.verifyMatterbridgeVersion).not.toHaveBeenCalled();
+    } finally {
+      prototype.verifyMatterbridgeVersion = verifyMatterbridgeVersion;
+    }
   });
 
   it('registers configured switch, outlet, and light endpoints with stable defaults', async () => {
@@ -226,6 +259,15 @@ describe('matterbridge-dummyswitch module', () => {
       'Matterbridge Dummy Switch',
       'Matterbridge Dummy Switch',
     ]);
+    expect(matterbridgeMock.registeredDevices[0]?.basicInformation).toEqual({
+      name: 'Desk Switch',
+      serialNumber: 'matterbridge-dummyswitch-1-desk-switch',
+      vendorId: 65521,
+      vendorName: 'Matterbridge',
+      productName: 'Matterbridge Dummy Switch',
+      productId: 1,
+      productVersion: '1.0.0',
+    });
     expect(matterbridgeMock.registeredDevices.every((endpoint) => endpoint.powerSourceWired && endpoint.requiredClusters)).toBe(true);
     expect(matterbridgeMock.registeredDevices.map((endpoint) => endpoint.attributes)).toEqual([
       [{ cluster: clustersMock.OnOff, attribute: 'onOff', value: false }],
@@ -234,6 +276,35 @@ describe('matterbridge-dummyswitch module', () => {
       [{ cluster: clustersMock.OnOff, attribute: 'onOff', value: false }],
       [{ cluster: clustersMock.OnOff, attribute: 'onOff', value: false }],
     ]);
+  });
+
+  it('waits for Matterbridge readiness before registering endpoints', async () => {
+    const { DummySwitchPlatform } = await import('../src/module.js');
+    const ready = createDeferred();
+    const log = createLog();
+    matterbridgeMock.setReady(ready.promise);
+    const platform = new DummySwitchPlatform(createMatterbridge() as never, log as never, createConfig({ switches: [{ name: 'Delayed Switch', type: 'switch' }] }));
+
+    const start = platform.onStart('bridge ready');
+
+    expect(log.info).toHaveBeenCalledWith('Starting dummy switch platform (bridge ready)');
+    expect(matterbridgeMock.registerDevice).not.toHaveBeenCalled();
+
+    ready.resolve();
+    await start;
+
+    expect(matterbridgeMock.registerDevice).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts without registering endpoints when switches are omitted', async () => {
+    const { DummySwitchPlatform } = await import('../src/module.js');
+    const log = createLog();
+    const platform = new DummySwitchPlatform(createMatterbridge() as never, log as never, createConfig());
+
+    await platform.onStart();
+
+    expect(log.info).toHaveBeenCalledWith('Starting dummy switch platform');
+    expect(matterbridgeMock.registerDevice).not.toHaveBeenCalled();
   });
 
   it('updates normalized switch config and logs that endpoint changes need a restart', async () => {
@@ -268,17 +339,21 @@ describe('matterbridge-dummyswitch module', () => {
 
   it('unregisters devices on shutdown only when configured', async () => {
     const { DummySwitchPlatform } = await import('../src/module.js');
-    const unregisteringPlatform = new DummySwitchPlatform(createMatterbridge() as never, createLog() as never, createConfig({ unregisterOnShutdown: true }));
+    const unregisteringLog = createLog();
+    const unregisteringPlatform = new DummySwitchPlatform(createMatterbridge() as never, unregisteringLog as never, createConfig({ unregisterOnShutdown: true }));
 
     await unregisteringPlatform.onShutdown('test');
 
     expect(matterbridgeMock.baseOnShutdown).toHaveBeenCalledWith('test');
+    expect(unregisteringLog.info).toHaveBeenCalledWith('Shutting down dummy switch platform (test)');
     expect(matterbridgeMock.unregisterAllDevices).toHaveBeenCalledTimes(1);
 
-    const keepingPlatform = new DummySwitchPlatform(createMatterbridge() as never, createLog() as never, createConfig());
+    const keepingLog = createLog();
+    const keepingPlatform = new DummySwitchPlatform(createMatterbridge() as never, keepingLog as never, createConfig());
 
     await keepingPlatform.onShutdown();
 
+    expect(keepingLog.info).toHaveBeenCalledWith('Shutting down dummy switch platform');
     expect(matterbridgeMock.unregisterAllDevices).toHaveBeenCalledTimes(1);
   });
 });
