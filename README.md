@@ -84,4 +84,4 @@ If `switches` is empty or omitted, the plugin starts without creating any dummy 
 
 CI runs formatting, linting, type checking, coverage tests, and the production build on pushes and pull requests.
 
-Publishing is handled by the GitHub `Publish to npm` workflow. It bumps the patch version, pushes the release commit and tag, and publishes to npm with provenance through npm Trusted Publishing.
+After CI succeeds for a push to `main`, the GitHub `Publish to npm` workflow publishes the tested commit as a unique next-patch prerelease under the npm `dev` tag. Manually dispatching the workflow bumps the patch version, pushes the release commit and tag, creates a GitHub release, and publishes to npm under the `latest` tag. Both paths use npm Trusted Publishing with provenance.
